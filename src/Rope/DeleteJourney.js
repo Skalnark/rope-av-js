@@ -166,9 +166,28 @@ export default class DeleteJourney extends Journey {
                 `Deletion complete.  Rope is now "${rope.toString()}".`;
             await this._print(finalMsg);
             await managerInstance.waitForUser();
-            window.dispatchEvent(new Event('journey-finished'));
             return ctx;
         };
         this.steps.push(mergeStep);
+
+        const rebalanceStep = new SplayStep('rebalance');
+        rebalanceStep.action = async (ctx) => {
+            rebalanceStep.restoreAndSave(rope, ctx);
+
+            await this._print(
+                t('messages.rebalancing') ?? 'Rebalancing the rope…',
+            );
+
+            rope.rebalance();
+
+            draw.renderTree(rope.root);
+            await this._print(
+                t('messages.rebalanceDone') ?? 'Rope rebalanced.',
+            );
+            await managerInstance.waitForUser();
+            window.dispatchEvent(new Event('journey-finished'));
+            return ctx;
+        };
+        this.steps.push(rebalanceStep);
     }
 }

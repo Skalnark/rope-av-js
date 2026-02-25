@@ -267,7 +267,16 @@ export default class Rope {
             return internal;
         };
 
-        this.root = build(0, chunks.length - 1, null);
+        const built = build(0, chunks.length - 1, null);
+        if (built.isLeaf) {
+            const internal = new SplayNode(null);
+            internal.left = built;
+            built.parent = internal;
+            this._update(internal);
+            this.root = internal;
+        } else {
+            this.root = built;
+        }
     }
 
     initialize(text = '') {

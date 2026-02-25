@@ -66,7 +66,7 @@ class HtmlBuilder {
             insertBtn.addEventListener('click', async () => {
                 const textEl = document.getElementById('insert-text-input');
                 const posEl = document.getElementById('insert-pos-input');
-                const text = textEl?.value?.trim();
+                const text = textEl?.value ?? '';
                 const pos = parseInt(posEl?.value ?? '0', 10);
                 if (!text) return;
                 const clampedPos = Math.max(
@@ -81,7 +81,7 @@ class HtmlBuilder {
         if (concatBtn) {
             concatBtn.addEventListener('click', async () => {
                 const textEl = document.getElementById('concat-text-input');
-                const text = textEl?.value?.trim();
+                const text = textEl?.value ?? '';
                 if (!text) return;
                 await managerInstance.concatenateText(text);
             });
