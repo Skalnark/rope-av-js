@@ -132,7 +132,7 @@ class Draw {
         const isLeaf = node.value !== null;
 
         if (isLeaf) {
-            const display = node.value.replace(/ /g, '\u00b7');
+            const display = node.value;
             const fontSize = Math.max(
                 7,
                 Math.min(
