@@ -150,21 +150,40 @@ class Draw {
                     'stroke-width': highlighted ? 3 : 1.5,
                 }),
             );
-            this.svg.appendChild(
-                this._el(
-                    'text',
-                    {
-                        x,
-                        y,
-                        'text-anchor': 'middle',
-                        'dominant-baseline': 'central',
-                        'font-size': fontSize,
-                        'font-family': 'Fira Code, monospace',
-                        fill: highlighted ? bg : fg,
-                    },
-                    display,
-                ),
-            );
+
+            const chars = [...display];
+            const totalWidth = chars.length * fontSize * 0.65;
+            let startX = x - totalWidth / 2 + fontSize * 0.325;
+            for (let i = 0; i < chars.length; ++i) {
+
+                this.svg.appendChild(
+                    this._el(
+                        'text',
+                        {
+                            x: startX,
+                            y,
+                            'text-anchor': 'middle',
+                            'dominant-baseline': 'central',
+                            'font-size': fontSize,
+                            'font-family': 'Fira Code, monospace',
+                            fill: highlighted ? bg : fg,
+                        },
+                        chars[i],
+                    ),
+                );
+                // Draw underline for each character (because of whitspaces)
+                this.svg.appendChild(
+                    this._el('line', {
+                        x1: startX - fontSize * 0.28,
+                        x2: startX + fontSize * 0.28,
+                        y1: y + fontSize * 0.55,
+                        y2: y + fontSize * 0.55,
+                        stroke: highlighted ? bg : fg,
+                        'stroke-width': 1.2,
+                    }),
+                );
+                startX += fontSize * 0.65;
+            }
         } else {
             const ri = Math.round(r * 0.82);
             this.svg.appendChild(
