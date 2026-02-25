@@ -1,15 +1,17 @@
-import Step from "./Step.js";
-import i18next from "i18next";
-import { add_item_code, greetings_code, check_item_code } from "./journeys/journey_code.js";
+import Step from './Step.js';
+import i18next from 'i18next';
+import {
+    add_item_code,
+    greetings_code,
+    check_item_code,
+} from './journeys/journey_code.js';
 
 class Parser {
-
     constructor() {
         this.messages = i18next.t(`messages`, { returnObjects: true });
     }
 
     async parseJourney(name) {
-
         let code = null;
 
         switch (name) {
@@ -57,8 +59,7 @@ class Parser {
             }
 
             let step = null;
-            if (result instanceof Step)
-                step = result;
+            if (result instanceof Step) step = result;
             else {
                 step = result.step;
                 lines = result.remainingLines;
@@ -66,15 +67,18 @@ class Parser {
             }
 
             if (step) {
-
                 step.line = line;
                 steps.push(step);
             } else {
-                throw new Error(`Failed to create step from line: ${line} at line ${l}`);
+                throw new Error(
+                    `Failed to create step from line: ${line} at line ${l}`,
+                );
             }
             tries++;
             if (tries > 500) {
-                console.error("Too many tries to parse lines, possible infinite loop.");
+                console.error(
+                    'Too many tries to parse lines, possible infinite loop.',
+                );
                 break;
             }
         }
@@ -102,27 +106,38 @@ class Parser {
 
     parseDefine(args, lines, l) {
         if (!args || args.length == 0)
-            throw new Error("define command requires a variable assignment as argument at line " + l);
+            throw new Error(
+                'define command requires a variable assignment as argument at line ' +
+                    l,
+            );
 
         let assignment = args.join(' ').trim().replace(/[;]/g, '');
         let parts = assignment.split('=');
         if (parts.length != 2)
-            throw new Error("define command requires a single '=' in the assignment at line " + l);
+            throw new Error(
+                "define command requires a single '=' in the assignment at line " +
+                    l,
+            );
 
         let varName = parts[0].trim();
         let valuePart = parts[1].trim();
         if (valuePart[0] === '[') {
-            let arr = valuePart.slice(1, -1).split(',').map(s => s.trim());
+            let arr = valuePart
+                .slice(1, -1)
+                .split(',')
+                .map((s) => s.trim());
             valuePart = arr;
         }
 
-        let context = { 'destiny': varName, 'origin': valuePart };
+        let context = { destiny: varName, origin: valuePart };
 
         let step = null;
         try {
             step = Step.createDefineAction();
         } catch (err) {
-            throw new Error(`Failed to create define action at line ${l}: ${err.message}`);
+            throw new Error(
+                `Failed to create define action at line ${l}: ${err.message}`,
+            );
         }
         step.name = 'define';
         step.context = context;
@@ -131,7 +146,9 @@ class Parser {
 
     parsePrint(args, lines, l) {
         if (!args || args.length == 0)
-            throw new Error("print command requires a message as argument at line " + l);
+            throw new Error(
+                'print command requires a message as argument at line ' + l,
+            );
 
         args = args.join(' ').trim().replace(/[;"]/g, '');
 
@@ -140,7 +157,9 @@ class Parser {
         try {
             step = Step.createMessageAction(messageVar);
         } catch (err) {
-            throw new Error(`Failed to create print action at line ${l}: ${err.message}`);
+            throw new Error(
+                `Failed to create print action at line ${l}: ${err.message}`,
+            );
         }
         step.name = 'print';
         return step;
@@ -148,7 +167,10 @@ class Parser {
 
     parseExecute(line, l) {
         if (!line || line.length == 0) {
-            throw new Error("execute command requires a function name as argument at line " + l);
+            throw new Error(
+                'execute command requires a function name as argument at line ' +
+                    l,
+            );
             return;
         }
 
@@ -159,11 +181,10 @@ class Parser {
 
         let expectedResult = line.length > 2 ? line[2] : null;
 
-        expectedResult === 'true' ? expectedResult = true : null;
-        expectedResult === 'false' ? expectedResult = false : null;
+        expectedResult === 'true' ? (expectedResult = true) : null;
+        expectedResult === 'false' ? (expectedResult = false) : null;
 
         if (expectedResult !== null) context['expectedResult'] = expectedResult;
-
 
         let step = null;
         step = Step.createExecutionAction(functionName, context);
@@ -173,10 +194,12 @@ class Parser {
 
     parseBranch(line, lines, l) {
         if (!line || line.length == 0)
-            throw new Error("check command requires a function name as argument at line " + l);
+            throw new Error(
+                'check command requires a function name as argument at line ' +
+                    l,
+            );
 
         line = line.slice(0, line.length - 1);
-
 
         let main = this.parseExecute(line, lines, l);
         if (!main) return null;
@@ -201,7 +224,6 @@ class Parser {
     }
 
     extractBlock(lines) {
-
         let depth = 1;
         let block = '';
         let i = 0;
@@ -218,7 +240,10 @@ class Parser {
             }
             block += char;
         }
-        if (depth !== 0) throw new Error(`unmatched braces in block starting with: ${block.substring(0, 20)}...`);
+        if (depth !== 0)
+            throw new Error(
+                `unmatched braces in block starting with: ${block.substring(0, 20)}...`,
+            );
         let remaining = lines.substring(closingIndex + 2).trim();
         block = block.substring(0, closingIndex).trim();
 

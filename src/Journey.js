@@ -1,7 +1,7 @@
-import Step from "./Step.js";
-import { managerInstance } from "./Manager.js";
-import draw from "./Draw.js";
-import { prompt } from "./Prompt.js";
+import Step from './Step.js';
+import { managerInstance } from './Manager.js';
+import draw from './Draw.js';
+import { prompt } from './Prompt.js';
 
 export class Journey {
     constructor(name = null) {
@@ -16,8 +16,12 @@ export class Journey {
     }
 
     async buildFromSteps(steps = [], filterPrints = false) {
-        steps.forEach(s => { s.journey = this; });
-        this.steps = filterPrints ? steps.filter(s => s.name !== 'print') : steps;
+        steps.forEach((s) => {
+            s.journey = this;
+        });
+        this.steps = filterPrints
+            ? steps.filter((s) => s.name !== 'print')
+            : steps;
         this.firstStep = steps[0];
     }
 
@@ -26,7 +30,6 @@ export class Journey {
     }
 
     async execute() {
-
         let context = structuredClone(this.context);
         let i = 0;
         let decision = 'next';
@@ -52,11 +55,9 @@ export class Journey {
                 context = this.steps[i].context;
                 i--;
                 continue;
-            }
-            else if (decision === 'next') {
+            } else if (decision === 'next') {
                 i++;
-            }
-            else {
+            } else {
                 throw new Error(`Unknown decision: ${decision}`);
             }
         }

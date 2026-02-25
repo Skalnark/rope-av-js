@@ -1,7 +1,7 @@
 import { managerInstance } from './Manager.js';
 
 export class Util {
-    static getLoremWords(n) {
+    static getLoremWords() {
         return [];
     }
 
@@ -12,8 +12,8 @@ export class Util {
         }
 
         let b = 255;
-        let r = (hash >> 8) & 0xFF;
-        let g = (hash >> 16) & 0xFF;
+        let r = (hash >> 8) & 0xff;
+        let g = (hash >> 16) & 0xff;
 
         return `rgb(${r}, ${g}, ${b})`;
     }
@@ -22,7 +22,8 @@ export class Util {
         let offset = 100;
         const el = document.getElementById(id);
         if (el) {
-            const y = el.getBoundingClientRect().top + window.pageYOffset - offset;
+            const y =
+                el.getBoundingClientRect().top + window.pageYOffset - offset;
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
     }
@@ -64,9 +65,8 @@ export class Util {
     }
 
     static async delay(ms) {
-        if (managerInstance.fastForward)
-            ms = 0;
-        return new Promise(resolve => setTimeout(resolve, ms));
+        if (managerInstance.fastForward) ms = 0;
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
     static async scroll(elementId) {

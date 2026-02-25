@@ -1,6 +1,6 @@
-import { managerInstance } from "./Manager.js";
-import { prompt } from "./Prompt.js";
-import { Util } from "./Util.js";
+import { managerInstance } from './Manager.js';
+import { prompt } from './Prompt.js';
+import { Util } from './Util.js';
 
 class Step {
     constructor(name, index) {
@@ -59,7 +59,6 @@ class Step {
     static createDefineAction() {
         let step = new Step();
         step.action = async (context) => {
-
             Util.updateContext(context, step.context);
 
             let name = context['destiny'];
@@ -83,11 +82,9 @@ class Step {
         return step;
     }
 
-    undo(context)
-    {
+    undo(context) {
         return context;
     }
-
 }
 
 export default Step;

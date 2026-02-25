@@ -1,4 +1,4 @@
-import { Util } from "./Util";
+import { Util } from './Util';
 
 class Prompt {
     constructor() {
@@ -10,7 +10,9 @@ class Prompt {
         this.quietMode = false;
         this.spans = [];
         this.promptSimulatorDiv = document.getElementById('prompt-simulator');
-        this.pseudoCodeSimulatorDiv = document.getElementById('pseudo-code-simulator');
+        this.pseudoCodeSimulatorDiv = document.getElementById(
+            'pseudo-code-simulator',
+        );
         this.pseudoCode = [];
         this.initListeners();
         this.lineCounter = 0;
@@ -22,7 +24,8 @@ class Prompt {
         span.id = `prompt-line-${this.lineCounter++}`;
         this.spans.push(span);
         this.promptSimulatorDiv.appendChild(span);
-        this.promptSimulatorDiv.scrollTop = this.promptSimulatorDiv.scrollHeight;
+        this.promptSimulatorDiv.scrollTop =
+            this.promptSimulatorDiv.scrollHeight;
     }
 
     async print(text = '', delay = 0) {
@@ -33,7 +36,7 @@ class Prompt {
         await Util.delay(delay);
     }
 
-    addSpanToPromptSimulator(text, prefix = ">") {
+    addSpanToPromptSimulator(text, prefix = '>') {
         if (!this.promptSimulatorDiv) return;
 
         let span = this.createSpan(text, prefix);
@@ -44,7 +47,8 @@ class Prompt {
                 Util.deleteElementById(line.id);
             }
         }
-        this.promptSimulatorDiv.scrollTop = this.promptSimulatorDiv.scrollHeight;
+        this.promptSimulatorDiv.scrollTop =
+            this.promptSimulatorDiv.scrollHeight;
     }
 
     createSpan(text, prefix = '') {
@@ -72,7 +76,10 @@ class Prompt {
     printJourneyMessage(message, context = {}) {
         for (const ctxKey in context) {
             const placeholder = `%${ctxKey}%`;
-            message = message.replace(new RegExp(placeholder, 'g'), context[ctxKey]);
+            message = message.replace(
+                new RegExp(placeholder, 'g'),
+                context[ctxKey],
+            );
         }
 
         this.print(message);
@@ -103,7 +110,7 @@ class Prompt {
     }
 
     async nextLine(line) {
-        if(line === undefined) throw new Error("Line number is required");
+        if (line === undefined) throw new Error('Line number is required');
         this.currentPseudoCodeLine = line - 1;
 
         this.simulatePseudoCode();
@@ -122,7 +129,9 @@ class Prompt {
         for (let i = 0; i < this.pseudoCode.length; i++) {
             if (i === this.currentPseudoCodeLine) {
                 this.pseudoCode[i].classList.add('pseudo-active');
-                this.pseudoCodeSimulatorDiv.scrollTop = this.pseudoCode[i].offsetTop - this.pseudoCodeSimulatorDiv.offsetTop;
+                this.pseudoCodeSimulatorDiv.scrollTop =
+                    this.pseudoCode[i].offsetTop -
+                    this.pseudoCodeSimulatorDiv.offsetTop;
             } else {
                 this.pseudoCode[i].classList.remove('pseudo-active');
             }
@@ -133,4 +142,3 @@ class Prompt {
 const prompt = new Prompt();
 export default Prompt;
 export { Prompt, prompt };
-
