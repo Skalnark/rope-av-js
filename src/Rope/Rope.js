@@ -2,8 +2,9 @@ import SplayNode from './SplayNode.js';
 
 /**
  * Rope data structure backed by a Splay Tree.
- * Each node stores a single character.
- * In-order traversal (left → node → right) yields the full string.
+ * Leaf nodes store substrings of up to Rope.MAX_LEAF_SIZE characters.
+ * Internal nodes are purely structural (null value, store subtree size only).
+ * In-order traversal of leaves yields the full rope string.
  */
 export default class Rope {
     constructor() {
@@ -18,9 +19,8 @@ export default class Rope {
 
     _update(node) {
         if (!node) return;
-        // Leaf nodes own 1 character; internal nodes own 0.
-        // Both may have children (splay can promote a leaf to an ancestor position).
-        const own = node.isLeaf ? 1 : 0;
+        // Leaf nodes own value.length characters; internal nodes own 0.
+        const own = node.isLeaf ? node.value.length : 0;
         node.size = own + this._sz(node.left) + this._sz(node.right);
     }
 
@@ -99,17 +99,11 @@ export default class Rope {
     // ── Tree traversal ────────────────────────────────────────────────────────
 
     /**
-     * Find the leaf node at in-order character position k (0-indexed).
-     *
-     * Traversal rules:
-     *   – At an internal node: navigate left/right by left-subtree size.
-     *     The internal node itself contributes 0 characters.
-     *   – At a leaf node: the leaf contributes 1 character at the current
-     *     position (= ls after subtracting left-subtree size).
-     *     If k == ls the leaf is the answer; otherwise skip the leaf's
-     *     character and continue into the right subtree.
+     * Find the leaf containing in-order character position k (0-indexed).
+     * Returns { node, offset } where offset is k's position within node.value.
+     * Internal nodes contribute 0 characters; leaves contribute value.length.
      */
-    _findKth(k) {
+    _findKthWithOffset(k) {
         let node = this.root;
         while (node) {
             const ls = this._sz(node.left);
@@ -118,22 +112,31 @@ export default class Rope {
             } else {
                 k -= ls;
                 if (node.isLeaf) {
-                    if (k === 0) return node; // this leaf is the k-th character
-                    k -= 1;                   // skip past this leaf's character
+                    if (k < node.value.length) return { node, offset: k };
+                    k -= node.value.length;
                 }
-                // internal node: contributes 0 characters, just go right
+                // internal node: contributes 0 characters, continue right
                 node = node.right;
             }
         }
         return null;
     }
 
+    /** Convenience wrapper – returns just the leaf node, ignoring offset. */
+    _findKth(k) {
+        const r = this._findKthWithOffset(k);
+        return r ? r.node : null;
+    }
+
     // ── Split / Merge ─────────────────────────────────────────────────────────
 
     /**
-     * Split at position k.
-     * Afterwards:   this.root = nodes [0 .. k-1]
-     * Returns:       root of nodes [k .. end]
+     * Split at character position k.
+     * After the call: this.root = characters [0, k-1].
+     * Returns: root covering characters [k, end].
+     *
+     * Handles multi-char leaves: if k falls inside a leaf the leaf string is
+     * split in two and only the right half is moved to the returned partition.
      */
     _splitAt(k) {
         if (k <= 0) {
@@ -144,16 +147,48 @@ export default class Rope {
         }
         if (k >= this.length) return null;
 
-        const node = this._findKth(k);
-        this._splay(node);
+        const found = this._findKthWithOffset(k);
+        if (!found) return null;
+        const { node: target, offset } = found;
 
-        const left = node.left;
-        node.left = null;
-        if (left) left.parent = null;
-        this._update(node);
+        if (offset === 0) {
+            // k falls exactly at the start of this leaf – no leaf split needed.
+            this._splay(target);
+            const leftPart = target.left;
+            target.left = null;
+            if (leftPart) leftPart.parent = null;
+            this._update(target);
+            this.root = leftPart;   // left partition [0, k-1]
+            return target;          // right partition [k, end]
+        }
 
-        this.root = left;  // left part stays in this
-        return node;       // right part (k..end) returned
+        // k falls inside the leaf at `offset`. Split the leaf string.
+        const leftVal  = target.value.slice(0, offset);
+        const rightVal = target.value.slice(offset);
+
+        // Shorten target to just the left portion, then splay it to root.
+        target.value = leftVal;
+        this._update(target);
+        this._splay(target);
+
+        // After splay: target is root, target.right = chars after original leaf.
+        const originalRight = target.right;
+        target.right = null;
+        if (originalRight) originalRight.parent = null;
+        this._update(target);   // this.root = target, left partition [0, k-1]
+
+        // Build right partition: rightVal leaf prepended to originalRight.
+        const rightLeaf = new SplayNode(rightVal);
+        rightLeaf.parent = null;
+        if (!originalRight) return rightLeaf;
+
+        const internal    = new SplayNode(null);
+        internal.left     = rightLeaf;
+        internal.right    = originalRight;
+        rightLeaf.parent     = internal;
+        originalRight.parent = internal;
+        this._update(internal);
+        return internal;
     }
 
     /**
@@ -214,13 +249,16 @@ export default class Rope {
     }
 
     /**
-     * Return the character at position `i` (0-indexed) and splay it to root.
+     * Return the character at position `i` (0-indexed) and splay its leaf to root.
+     * With multi-char leaves, this returns the specific character within the leaf.
      */
     index(i) {
         if (i < 0 || i >= this.length) return null;
-        const node = this._findKth(i);
-        if (node) this._splay(node);
-        return node ? node.value : null;
+        const result = this._findKthWithOffset(i);
+        if (!result) return null;
+        const { node, offset } = result;
+        this._splay(node);
+        return node.value[offset];
     }
 
     /**
@@ -253,44 +291,35 @@ export default class Rope {
     nodeCount() { return this._sz(this.root); }
 
     /**
-     * Rebuild the current tree as a height-balanced BST while preserving
-     * in-order (i.e. string) order.  Uses the standard recursive median-split
-     * approach: O(n) time and O(log n) stack space.
-     */
-    /**
      * Rebuild the tree as a height-balanced Rope while preserving in-order
-     * (string) order.  The result is a proper Rope:
-     *   – Leaf nodes at the bottom hold exactly one character each.
-     *   – Internal nodes hold no data; they only carry the subtree size.
-     * Uses the standard recursive median-split approach: O(n) time.
+     * (string) order.  Leaves hold up to Rope.MAX_LEAF_SIZE characters;
+     * internal nodes are structural only.
      */
     rebalance() {
         if (!this.root) return;
 
-        // 1. Collect in-order character values from leaf nodes only.
-        const chars = [];
-        const collect = (n) => {
-            if (!n) return;
-            collect(n.left);
-            if (n.isLeaf) chars.push(n.value);
-            collect(n.right);
-        };
-        collect(this.root);
+        // 1. Collect the full rope string.
+        const s = this.toString();
+        if (!s) { this.root = null; return; }
 
-        if (chars.length === 0) { this.root = null; return; }
+        // 2. Split string into chunks of at most MAX_LEAF_SIZE chars.
+        // Read leaf size from the DOM input; fall back to 2 if unavailable.
+        const chunks = [];
+        const _inputEl = typeof document !== 'undefined' && document.getElementById('leaf-size-input');
+        const _inputVal = _inputEl ? parseInt(_inputEl.value, 10) : NaN;
+        const mls = Math.max(1, isNaN(_inputVal) ? 2 : _inputVal);
+        for (let i = 0; i < s.length; i += mls) chunks.push(s.slice(i, i + mls));
 
-        // 2. Build a balanced binary tree:
-        //    – Single character range → leaf node.
-        //    – Multiple characters → internal node with two subtrees.
+        // 3. Build balanced tree: single chunk → leaf; multiple → internal node.
         const build = (lo, hi, parent) => {
             if (lo === hi) {
-                const leaf    = new SplayNode(chars[lo]);
-                leaf.parent   = parent;
-                leaf.size     = 1;
+                const leaf  = new SplayNode(chunks[lo]);
+                leaf.parent = parent;
+                // SplayNode constructor already sets size = value.length
                 return leaf;
             }
             const mid      = lo + ((hi - lo) >> 1);
-            const internal  = new SplayNode(null); // internal: no character
+            const internal = new SplayNode(null);
             internal.parent = parent;
             internal.left   = build(lo,      mid, internal);
             internal.right  = build(mid + 1, hi,  internal);
@@ -298,7 +327,7 @@ export default class Rope {
             return internal;
         };
 
-        this.root = build(0, chars.length - 1, null);
+        this.root = build(0, chunks.length - 1, null);
     }
 
     initialize(text = '') {
@@ -324,7 +353,7 @@ export default class Rope {
 
     static deserialize(data) {
         if (!data) return null;
-        // SplayNode(null) → internal node; SplayNode(char) → leaf node.
+        // SplayNode(null) → internal node; SplayNode(string) → leaf node.
         const node  = new SplayNode(data.v);
         node.left   = Rope.deserialize(data.l);
         node.right  = Rope.deserialize(data.r);
@@ -334,7 +363,7 @@ export default class Rope {
         // Recompute sizes bottom-up respecting the leaf/internal distinction.
         const recompute = (n) => {
             if (!n) return 0;
-            const own = n.isLeaf ? 1 : 0;
+            const own = n.isLeaf ? n.value.length : 0;
             n.size = own + recompute(n.left) + recompute(n.right);
             return n.size;
         };

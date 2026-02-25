@@ -11,7 +11,7 @@ class HtmlBuilder {
         this.initListeners();
     }
 
-    /* ── tab wiring ─────────────────────────────────────────────────────── */
+    // Tab wiring
 
     loadSimulatorTab() {
         const simBtn    = document.getElementById('simulator-tab');
@@ -44,11 +44,11 @@ class HtmlBuilder {
         if (simBtn) simBtn.click();
     }
 
-    /* ── info labels ─────────────────────────────────────────────────────── */
+    // Info labels
 
     setInfoLabels() { managerInstance.updateInfoLabels(); }
 
-    /* ── event listeners ─────────────────────────────────────────────────── */
+    // Event listeners
 
     initListeners() {
         this.initOperationListeners();
@@ -58,7 +58,6 @@ class HtmlBuilder {
     }
 
     initOperationListeners() {
-        /* Insert ─────────────────────────────────────────── */
         const insertBtn = document.getElementById('insert-submit');
         if (insertBtn) {
             insertBtn.addEventListener('click', async () => {
@@ -72,7 +71,16 @@ class HtmlBuilder {
             });
         }
 
-        /* Delete ─────────────────────────────────────────── */
+        const concatBtn = document.getElementById('concat-submit');
+        if (concatBtn) {
+            concatBtn.addEventListener('click', async () => {
+                const textEl = document.getElementById('concat-text-input');
+                const text   = textEl?.value?.trim();
+                if (!text) return;
+                await managerInstance.concatenateText(text);
+            });
+        }
+
         const deleteBtn = document.getElementById('delete-submit');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', async () => {
@@ -91,7 +99,6 @@ class HtmlBuilder {
             });
         }
 
-        /* Index ──────────────────────────────────────────── */
         const indexBtn = document.getElementById('index-submit');
         if (indexBtn) {
             indexBtn.addEventListener('click', async () => {
@@ -101,7 +108,6 @@ class HtmlBuilder {
             });
         }
 
-        /* Clear ──────────────────────────────────────────── */
         const clearBtn = document.getElementById('clear-submit');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
@@ -117,14 +123,30 @@ class HtmlBuilder {
         if (scrollBtn) {
             scrollBtn.addEventListener('click', () => Util.scrollToPromptTextarea());
         }
+
+        const leafSizeInput = document.getElementById('leaf-size-input');
+        if (leafSizeInput) {
+            leafSizeInput.addEventListener('change', () => {
+                const v = parseInt(leafSizeInput.value, 10);
+                if (!isNaN(v) && v >= 1) {
+                    const Rope = managerInstance.rope.constructor;
+                    Rope.MAX_LEAF_SIZE = v;
+                }
+            });
+        }
     }
 
     initClearListeners() {
-        /* also update info on init input change */
         const initTextEl = document.getElementById('init-text-input');
         const initBtn    = document.getElementById('init-submit');
         if (initBtn) {
             initBtn.addEventListener('click', () => {
+                // Apply leaf size setting before initializing.
+                const leafSizeEl = document.getElementById('leaf-size-input');
+                if (leafSizeEl) {
+                    const v = parseInt(leafSizeEl.value, 10);
+                    if (!isNaN(v) && v >= 1) managerInstance.rope.constructor.MAX_LEAF_SIZE = v;
+                }
                 const text = initTextEl?.value ?? '';
                 managerInstance.rope.initialize(text);
                 draw.renderTree(managerInstance.rope.root);
@@ -160,6 +182,7 @@ class HtmlBuilder {
     disableInputs() {
         const ids = [
             'insert-text-input', 'insert-pos-input',  'insert-submit',
+            'concat-text-input', 'concat-submit',
             'delete-from-input', 'delete-to-input',   'delete-submit',
             'index-pos-input',   'index-submit',       'clear-submit',
             'init-text-input',   'init-submit',        'fast-forward-checkbox',
@@ -171,6 +194,7 @@ class HtmlBuilder {
     enableInputs() {
         const ids = [
             'insert-text-input', 'insert-pos-input',  'insert-submit',
+            'concat-text-input', 'concat-submit',
             'delete-from-input', 'delete-to-input',   'delete-submit',
             'index-pos-input',   'index-submit',       'clear-submit',
             'init-text-input',   'init-submit',        'fast-forward-checkbox',

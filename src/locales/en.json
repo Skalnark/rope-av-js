@@ -8,6 +8,7 @@
     "invalidDeleteRange":  "Invalid range: 'from' must be less than 'to'.",
 
     "insertStart":    "Inserting \"{{text}}\" at position {{pos}}.",
+    "concatStart":    "Appending \"{{text}}\" to the end of the rope.",
     "splitAt":        "Splitting the rope at position {{pos}}...",
     "splitDone":      "Left part: {{leftLen}} char(s). Right part: {{rightLen}} char(s).",
     "buildNodes":     "Building {{count}} new node(s) for \"{{text}}\"...",
@@ -48,6 +49,12 @@
     "atPosLabel":         "at position:",
     "insertTextPlaceholder": "Text to insert",
     "insert":             "Insert",
+
+    "concatLabel":           "Concatenate:",
+    "concatTextPlaceholder": "Text to append",
+    "concat":                "Concat",
+
+    "leafSizeLabel": "Max leaf size:",
 
     "deleteLabel":        "Delete range:",
     "fromPlaceholder":    "from",

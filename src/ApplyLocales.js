@@ -1,7 +1,6 @@
 import i18next from 'i18next';
 
 export function applyLocales(root = document) {
-  // apply simple translations for elements with data-i18n
   root.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     try {
@@ -10,11 +9,9 @@ export function applyLocales(root = document) {
         el.innerText = text;
       }
     } catch (e) {
-      // ignore
     }
   });
 
-  // apply placeholders
   root.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     const key = el.getAttribute('data-i18n-placeholder');
     try {
@@ -23,11 +20,9 @@ export function applyLocales(root = document) {
         el.placeholder = text;
       }
     } catch (e) {
-      // ignore
     }
   });
 
-  // apply values
   root.querySelectorAll('[data-i18n-value]').forEach(el => {
     const key = el.getAttribute('data-i18n-value');
     try {
@@ -36,11 +31,9 @@ export function applyLocales(root = document) {
         el.value = text;
       }
     } catch (e) {
-      // ignore
     }
   });
 
-  // apply hrefs for anchors or other elements that need localized URLs
   root.querySelectorAll('[data-i18n-href]').forEach(el => {
     const key = el.getAttribute('data-i18n-href');
     try {
@@ -49,7 +42,6 @@ export function applyLocales(root = document) {
         el.href = url;
       }
     } catch (e) {
-      // ignore
     }
   });
 }

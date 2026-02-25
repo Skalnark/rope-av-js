@@ -26,11 +26,17 @@ import Rope from './Rope.js';
 export default class IndexJourney extends Journey {
     constructor() {
         super('index-journey');
-        this._targetNode = null;
-        this._pathNodes  = null;
+        this._targetNode   = null;
+        this._targetChar   = null;  // the specific character at the queried position
+        this._targetOffset = 0;     // offset of the character within the leaf
+        this._pathNodes    = null;
     }
 
-    /** Find the leaf node at character position k using the Rope traversal rules. */
+    /**
+     * Find {node, offset} for character position k using the Rope traversal rules.
+     * Handles multi-char leaves: internal nodes contribute 0 chars, leaves contribute
+     * value.length chars.
+     */
     _findKthNode(root, k) {
         const sz = (n) => n ? n.size : 0;
         let node = root;
@@ -40,11 +46,10 @@ export default class IndexJourney extends Journey {
                 node = node.left;
             } else {
                 k -= ls;
-                if (node.value !== null) { // leaf node
-                    if (k === 0) return node;
-                    k -= 1; // skip past this leaf's character
+                if (node.value !== null) { // leaf
+                    if (k < node.value.length) return { node, offset: k };
+                    k -= node.value.length;
                 }
-                // internal node contributes 0 characters; just go right
                 node = node.right;
             }
         }
@@ -71,8 +76,10 @@ export default class IndexJourney extends Journey {
         initStep.skip   = true;
         initStep.action = async (ctx) => {
             initStep.restoreAndSave(rope, ctx);
-            this._targetNode = null;
-            this._pathNodes  = null;
+            this._targetNode   = null;
+            this._targetChar   = null;
+            this._targetOffset = 0;
+            this._pathNodes    = null;
             draw.renderTree(rope.root);
             await prompt.nextLine(1);
 
@@ -101,10 +108,11 @@ export default class IndexJourney extends Journey {
             await prompt.nextLine(2);
 
             // Collect traversal path (no tree modification).
-            // Uses the same leaf/internal traversal rules as Rope._findKth.
+            // Uses the same leaf/internal traversal rules as Rope._findKthWithOffset.
             const path = [];
             let node = rope.root;
             let k    = pos;
+            let foundOffset = 0;
             while (node) {
                 path.push(node);
                 const ls = rope._sz(node.left);
@@ -113,23 +121,28 @@ export default class IndexJourney extends Journey {
                 } else {
                     k -= ls;
                     if (node.value !== null) { // leaf
-                        if (k === 0) break;    // found the target leaf
-                        k -= 1;                // skip past this leaf's character
+                        if (k < node.value.length) {
+                            foundOffset = k;
+                            break; // this leaf contains position pos
+                        }
+                        k -= node.value.length;
                     }
                     node = node.right;
                 }
             }
 
-            this._targetNode = path[path.length - 1] ?? null;
-            this._pathNodes  = new Set(path);
+            this._targetNode   = path[path.length - 1] ?? null;
+            this._targetChar   = this._targetNode?.value?.[foundOffset] ?? null;
+            this._targetOffset = foundOffset;
+            this._pathNodes    = new Set(path);
 
             draw.renderTree(rope.root, this._pathNodes);
 
             const msg = t('messages.findPath', { pos, steps: path.length })
                      ?? `Traversed ${path.length} node(s) to reach position ${pos}.`;
             await this._print(msg);
-            const foundMsg = t('messages.foundChar', { char: this._targetNode?.value, pos })
-                          ?? `Found character '${this._targetNode?.value}' at position ${pos}.`;
+            const foundMsg = t('messages.foundChar', { char: this._targetChar, pos })
+                          ?? `Found character '${this._targetChar}' at position ${pos}.`;
             await this._print(foundMsg);
             await managerInstance.waitForUser();
             return ctx;
@@ -142,14 +155,19 @@ export default class IndexJourney extends Journey {
             // Restore to pre-splay state (same as initial since findStep is read-only).
             splayStep.restoreAndSave(rope, ctx);
 
-            // Re-traverse in the (possibly restored) tree to get a fresh node ref.
-            this._targetNode = this._findKthNode(rope.root, pos);
-            this._pathNodes  = this._targetNode ? new Set([this._targetNode]) : new Set();
+            // Re-traverse in the (possibly restored) tree to get fresh refs.
+            const result = this._findKthNode(rope.root, pos);
+            if (result) {
+                this._targetNode   = result.node;
+                this._targetChar   = result.node.value[result.offset];
+                this._targetOffset = result.offset;
+            }
+            this._pathNodes = this._targetNode ? new Set([this._targetNode]) : new Set();
 
             await prompt.nextLine(3);
-            const charVal = this._targetNode?.value ?? '?';
+            const charVal = this._targetChar ?? '?';
             const msg = t('messages.splayNode', { char: charVal })
-                     ?? `Splaying node '${charVal}' to the root…`;
+                     ?? `Splaying leaf containing '${charVal}' to the root…`;
             await this._print(msg);
 
             if (this._targetNode) {
@@ -171,11 +189,19 @@ export default class IndexJourney extends Journey {
             resultStep.restoreAndSave(rope, ctx);
             await prompt.nextLine(4);
 
-            const value     = rope.root ? rope.root.value : null;
+            // After restore, re-find to get the correct char value.
+            const res   = this._findKthNode(rope.root, pos);
+            const value = res ? res.node.value[res.offset] : null;
             const resultMsg = t('messages.indexResult', { pos, char: value })
                            ?? `rope[${pos}] = '${value}'.`;
             await this._print(resultMsg);
-            draw.renderTree(rope.root, rope.root ? new Set([rope.root]) : new Set());
+            // Splay the leaf to show the accessed node prominently.
+            if (res) {
+                rope._splay(res.node);
+                draw.renderTree(rope.root, new Set([rope.root]));
+            } else {
+                draw.renderTree(rope.root);
+            }
             await managerInstance.waitForUser();
             window.dispatchEvent(new Event('journey-finished'));
             return ctx;

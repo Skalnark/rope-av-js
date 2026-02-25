@@ -1,23 +1,15 @@
-/**
- * Draw.js – Splay-Tree / Rope visualiser
- *
- * Renders the rope's underlying splay tree as an SVG.
- * Nodes are positioned horizontally by in-order index (= string position)
- * and vertically by depth.  Left-child edges are blue, right-child edges orange.
- * A highlight set can mark nodes with a special accent colour during journeys.
- */
+// Draw.js – Splay-Tree / Rope visualiser
 class Draw {
     constructor() {
-        this._svgEl = null; // lazily resolved on first use
+        this._svgEl = null;
     }
 
-    /** Lazily resolve the SVG element so the module can be imported before DOM is ready. */
     get svg() {
         if (!this._svgEl) this._svgEl = document.getElementById('rope-svg');
         return this._svgEl;
     }
 
-    /* ── colour helper ───────────────────────────────────────────────────── */
+    // Colour helper
 
     _getVar(name, fallback) {
         try {
@@ -27,7 +19,7 @@ class Draw {
         return fallback;
     }
 
-    /* ── SVG element factories ───────────────────────────────────────────── */
+    // SVG element factories
 
     _el(tag, attrs = {}, text = null) {
         const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -36,11 +28,8 @@ class Draw {
         return el;
     }
 
-    /* ── layout computation ──────────────────────────────────────────────── */
+    // Layout computation
 
-    /**
-     * Returns a Map<node, { inOrderPos, depth }> for every node in the tree.
-     */
     _computeLayout(root) {
         const layout = new Map();
         let counter = 0;
@@ -54,16 +43,10 @@ class Draw {
         return layout;
     }
 
-    /* ── main render ─────────────────────────────────────────────────────── */
+    // Main render
 
-    /**
-     * Render the splay tree.
-     * @param {SplayNode|null} root          - tree root
-     * @param {Set}            highlightNodes - nodes to visually highlight
-     */
     renderTree(root, highlightNodes = new Set()) {
         if (!this.svg) return;
-        // Clear previous drawing
         while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
 
         if (!root) {
@@ -111,7 +94,7 @@ class Draw {
         this._drawStringLabel(root, H - 16);
     }
 
-    /* ── sub-drawing helpers ─────────────────────────────────────────────── */
+    // Sub-drawing helpers
 
     _drawEdge(x1, y1, x2, y2, r, color) {
         const dx = x2 - x1, dy = y2 - y1;
@@ -130,7 +113,11 @@ class Draw {
         const isLeaf  = node.value !== null;
 
         if (isLeaf) {
-            // ── Leaf node: filled circle, shows the character ──────────────
+            const display  = node.value.replace(/ /g, '\u00b7');
+            const fontSize = Math.max(7, Math.min(
+                Math.round(r * 0.95),
+                Math.floor((2 * r - 4) / (display.length * 0.65))
+            ));
             this.svg.appendChild(this._el('circle', {
                 cx: x, cy: y, r,
                 fill:           highlighted ? accent : bg,
@@ -141,12 +128,11 @@ class Draw {
                 x, y,
                 'text-anchor':       'middle',
                 'dominant-baseline': 'central',
-                'font-size':         Math.round(r * 0.95),
+                'font-size':         fontSize,
                 'font-family':       'Fira Code, monospace',
                 fill:                highlighted ? bg : fg,
-            }, node.value === ' ' ? '·' : node.value));
+            }, display));
         } else {
-            // ── Internal node: dashed circle, shows rope weight (left-subtree size) ──
             const ri = Math.round(r * 0.82);
             this.svg.appendChild(this._el('circle', {
                 cx: x, cy: y, r: ri,
@@ -156,7 +142,6 @@ class Draw {
                 'stroke-dasharray':  '4 3',
                 opacity:             0.7,
             }));
-            // Show the rope weight: number of characters in the left subtree
             const weight = node.left ? node.left.size : 0;
             this.svg.appendChild(this._el('text', {
                 x, y,
@@ -169,7 +154,6 @@ class Draw {
             }, String(weight)));
         }
 
-        // Size annotation below the node
         this.svg.appendChild(this._el('text', {
             x, y: y + r + 11,
             'text-anchor':  'middle',
@@ -182,7 +166,6 @@ class Draw {
 
     _drawStringLabel(root, y) {
         let s = '';
-        // Only leaf nodes contribute characters; internal nodes are structural.
         const trav = (n) => { if (!n) return; trav(n.left); if (n.value !== null) s += n.value; trav(n.right); };
         trav(root);
         this.svg.appendChild(this._el('text', {
@@ -212,7 +195,6 @@ class Draw {
 
     /* ── convenience ──────────────────────────────────────────────────────── */
 
-    /** Re-render the tree without any highlights (e.g. after theme toggle). */
     redraw(root) { this.renderTree(root); }
 }
 

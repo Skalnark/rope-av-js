@@ -3,27 +3,10 @@ import { managerInstance } from '../Manager.js';
 import draw from '../Draw.js';
 import Rope from './Rope.js';
 
-/**
- * SplayStep – Step subclass for all Rope / splay-tree operations.
- *
- * Problem: Journey.execute() re-executes the previous step when the user presses
- * Back, which would break non-idempotent operations (split, concat, etc.).
- *
- * Solution: each step stores a snapshot of the tree taken THE FIRST TIME the step
- * runs (_preSnapshot).  If the action is re-invoked (after Back), it restores the
- * tree from that snapshot before re-applying its transformation, making every step
- * safely idempotent.
- *
- * Usage in each action:
- *   action = async (ctx) => {
- *       thisStep.restoreAndSave(rope, ctx);   // ← always first line
- *       // ... perform tree modifications ...
- *   };
- */
 export default class SplayStep extends Step {
     constructor(name) {
         super(name);
-        this._preSnapshot = undefined; // tree state before this step's first execution
+        this._preSnapshot = undefined;
     }
 
     /**
@@ -37,11 +20,10 @@ export default class SplayStep extends Step {
      */
     restoreAndSave(rope, ctx) {
         if (this._preSnapshot !== undefined) {
-            // Re-execution after Back → restore to the known-good pre-step state
             rope.restore(this._preSnapshot);
         }
         this._preSnapshot = Rope.serialize(rope.root);
-        ctx.treeSnapshot  = this._preSnapshot; // kept in context so undo() works
+        ctx.treeSnapshot  = this._preSnapshot;
     }
 
     /**

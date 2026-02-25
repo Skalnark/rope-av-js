@@ -5,23 +5,6 @@ import draw from '../Draw.js';
 import { prompt } from '../Prompt.js';
 import Rope from './Rope.js';
 
-/*
- * DeleteJourney
- *
- * Visualises deleting characters in [from, to) from the rope.
- *
- * Visual pseudocode:
- *   procedure delete(from, to):
- *     (L, rest) = split(rope, from)
- *     (M, R)    = split(rest, to - from)
- *     discard M
- *     rope = concat(L, R)
- *
- * Design notes:
- *  - Each mutating step calls restoreAndSave() to make it idempotent on Back.
- *  - Intermediate SplayNode refs are stored on the journey AND serialised as
- *    snapshots so they can be re-hydrated after a restore.
- */
 export default class DeleteJourney extends Journey {
     constructor() {
         super('delete-journey');
@@ -32,7 +15,6 @@ export default class DeleteJourney extends Journey {
         this._deletedRoot       = null;
     }
 
-    /** Deserialise a snapshot into a standalone SplayNode tree. */
     _treeFromSnapshot(snapshot) {
         if (!snapshot) return null;
         const tmp = new Rope();
@@ -58,7 +40,6 @@ export default class DeleteJourney extends Journey {
   rope = concat(L, R)`;
         prompt.initPseudoCode(pseudoCode);
 
-        /* ── Step 0: introduction ─────────────────────────────────────────── */
         const initStep  = new SplayStep('init');
         initStep.skip   = true;
         initStep.action = async (ctx) => {
@@ -79,12 +60,10 @@ export default class DeleteJourney extends Journey {
         };
         this.steps.push(initStep);
 
-        /* ── Step 1: first split – isolate prefix ─────────────────────────── */
         const split1  = new SplayStep('split1');
         split1.action = async (ctx) => {
-            // Restore to pre-split state (full rope).
             split1.restoreAndSave(rope, ctx);
-            // Reset intermediate refs.
+
             this._restRoot         = null;
             this._restRootSnapshot = null;
 
@@ -108,7 +87,6 @@ export default class DeleteJourney extends Journey {
         };
         this.steps.push(split1);
 
-        /* ── Step 2: second split – isolate the range to delete ──────────── */
         const split2  = new SplayStep('split2');
         split2.action = async (ctx) => {
             // Restore rope.root to post-split1 state (prefix only).

@@ -1,7 +1,6 @@
 import { managerInstance } from './Manager.js';
 
 export class Util {
-    /** @deprecated No longer used – kept for API compatibility. */
     static getLoremWords(n) {
         return [];
     }

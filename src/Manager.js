@@ -37,6 +37,13 @@ export default class Manager {
         await j.execute();
     }
 
+    async concatenateText(text) {
+        // Append at end – reuse InsertJourney with pos = current length.
+        const j = new InsertJourney();
+        j.build(text, this.rope.length);
+        await j.execute();
+    }
+
     async deleteRange(from, to) {
         const j = new DeleteJourney();
         j.build(from, to);

@@ -8,6 +8,7 @@
     "invalidDeleteRange":  "Intervalo inválido: 'from' deve ser menor que 'to'.",
 
     "insertStart":    "Inserindo \"{{text}}\" na posição {{pos}}.",
+    "concatStart":    "Adicionando \"{{text}}\" ao final do rope.",
     "splitAt":        "Dividindo o rope na posição {{pos}}...",
     "splitDone":      "Parte esquerda: {{leftLen}} caractere(s). Parte direita: {{rightLen}} caractere(s).",
     "buildNodes":     "Criando {{count}} novo(s) nó(s) para \"{{text}}\"...",
@@ -48,6 +49,12 @@
     "atPosLabel":            "na posição:",
     "insertTextPlaceholder": "Texto a inserir",
     "insert":                "Inserir",
+
+    "concatLabel":           "Concatenar:",
+    "concatTextPlaceholder": "Texto a adicionar",
+    "concat":                "Concat",
+
+    "leafSizeLabel": "Tamanho máx. da folha:",
 
     "deleteLabel":     "Remover intervalo:",
     "fromPlaceholder": "de",
