@@ -124,39 +124,66 @@ class Draw {
     }
 
     _drawNode(node, x, y, r, highlighted) {
-        const accent = this._getVar('--accent-color', '#168344');
-        const bg     = this._getVar('--panel-bg',    '#181c1f');
-        const fg     = this._getVar('--text',        '#b6fcd5');
+        const accent  = this._getVar('--accent-color', '#168344');
+        const bg      = this._getVar('--panel-bg',    '#181c1f');
+        const fg      = this._getVar('--text',        '#b6fcd5');
+        const isLeaf  = node.value !== null;
 
-        this.svg.appendChild(this._el('circle', {
-            cx: x, cy: y, r,
-            fill:         highlighted ? accent : bg,
-            stroke:       highlighted ? fg     : accent,
-            'stroke-width': highlighted ? 3 : 1.5,
-        }));
-        this.svg.appendChild(this._el('text', {
-            x, y,
-            'text-anchor':        'middle',
-            'dominant-baseline':  'central',
-            'font-size':          Math.round(r * 0.95),
-            'font-family':        'Fira Code, monospace',
-            fill:                 highlighted ? bg : fg,
-        }, node.value === ' ' ? '·' : node.value));
+        if (isLeaf) {
+            // ── Leaf node: filled circle, shows the character ──────────────
+            this.svg.appendChild(this._el('circle', {
+                cx: x, cy: y, r,
+                fill:           highlighted ? accent : bg,
+                stroke:         highlighted ? fg     : accent,
+                'stroke-width': highlighted ? 3 : 1.5,
+            }));
+            this.svg.appendChild(this._el('text', {
+                x, y,
+                'text-anchor':       'middle',
+                'dominant-baseline': 'central',
+                'font-size':         Math.round(r * 0.95),
+                'font-family':       'Fira Code, monospace',
+                fill:                highlighted ? bg : fg,
+            }, node.value === ' ' ? '·' : node.value));
+        } else {
+            // ── Internal node: dashed circle, shows rope weight (left-subtree size) ──
+            const ri = Math.round(r * 0.82);
+            this.svg.appendChild(this._el('circle', {
+                cx: x, cy: y, r: ri,
+                fill:                'none',
+                stroke:              highlighted ? fg : accent,
+                'stroke-width':      highlighted ? 2.5 : 1.5,
+                'stroke-dasharray':  '4 3',
+                opacity:             0.7,
+            }));
+            // Show the rope weight: number of characters in the left subtree
+            const weight = node.left ? node.left.size : 0;
+            this.svg.appendChild(this._el('text', {
+                x, y,
+                'text-anchor':       'middle',
+                'dominant-baseline': 'central',
+                'font-size':         Math.round(ri * 0.72),
+                'font-family':       'sans-serif',
+                fill:                highlighted ? fg : accent,
+                opacity:             0.85,
+            }, String(weight)));
+        }
 
-        // Size annotation
+        // Size annotation below the node
         this.svg.appendChild(this._el('text', {
             x, y: y + r + 11,
             'text-anchor':  'middle',
             'font-size':    Math.max(9, Math.round(r * 0.55)),
             'font-family':  'sans-serif',
             fill:           fg,
-            opacity:        0.55,
+            opacity:        0.45,
         }, 's=' + node.size));
     }
 
     _drawStringLabel(root, y) {
         let s = '';
-        const trav = (n) => { if (!n) return; trav(n.left); s += n.value; trav(n.right); };
+        // Only leaf nodes contribute characters; internal nodes are structural.
+        const trav = (n) => { if (!n) return; trav(n.left); if (n.value !== null) s += n.value; trav(n.right); };
         trav(root);
         this.svg.appendChild(this._el('text', {
             x:              (this.svg.clientWidth || 400) / 2,

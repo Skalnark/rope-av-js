@@ -17,7 +17,11 @@ export default class Rope {
     _sz(node) { return node ? node.size : 0; }
 
     _update(node) {
-        if (node) node.size = 1 + this._sz(node.left) + this._sz(node.right);
+        if (!node) return;
+        // Leaf nodes own 1 character; internal nodes own 0.
+        // Both may have children (splay can promote a leaf to an ancestor position).
+        const own = node.isLeaf ? 1 : 0;
+        node.size = own + this._sz(node.left) + this._sz(node.right);
     }
 
     // ── Rotations ─────────────────────────────────────────────────────────────
@@ -95,14 +99,31 @@ export default class Rope {
     // ── Tree traversal ────────────────────────────────────────────────────────
 
     /**
-     * Find the node at in-order position k (0-indexed).
+     * Find the leaf node at in-order character position k (0-indexed).
+     *
+     * Traversal rules:
+     *   – At an internal node: navigate left/right by left-subtree size.
+     *     The internal node itself contributes 0 characters.
+     *   – At a leaf node: the leaf contributes 1 character at the current
+     *     position (= ls after subtracting left-subtree size).
+     *     If k == ls the leaf is the answer; otherwise skip the leaf's
+     *     character and continue into the right subtree.
      */
-    _findKth(k, node = this.root) {
+    _findKth(k) {
+        let node = this.root;
         while (node) {
             const ls = this._sz(node.left);
-            if (k < ls)      { node = node.left; }
-            else if (k === ls) { return node; }
-            else               { k -= ls + 1; node = node.right; }
+            if (k < ls) {
+                node = node.left;
+            } else {
+                k -= ls;
+                if (node.isLeaf) {
+                    if (k === 0) return node; // this leaf is the k-th character
+                    k -= 1;                   // skip past this leaf's character
+                }
+                // internal node: contributes 0 characters, just go right
+                node = node.right;
+            }
         }
         return null;
     }
@@ -136,7 +157,9 @@ export default class Rope {
     }
 
     /**
-     * Append rightRoot to the end of this rope.
+     * Append rightRoot to the end of this rope by creating a new internal
+     * node that wraps both subtrees.  This preserves the Rope invariant:
+     * internal nodes hold no character data.
      */
     _mergeRight(rightRoot) {
         if (!rightRoot) return;
@@ -146,15 +169,14 @@ export default class Rope {
             return;
         }
 
-        // Find rightmost node of current tree and splay to root
-        let node = this.root;
-        while (node.right) node = node.right;
-        this._splay(node);
-
-        // node.right is now null (it was rightmost)
-        node.right = rightRoot;
-        rightRoot.parent = node;
-        this._update(node);
+        // Create a new internal node (value = null) combining both sides.
+        const internal  = new SplayNode(null);
+        internal.left   = this.root;
+        internal.right  = rightRoot;
+        this.root.parent  = internal;
+        rightRoot.parent  = internal;
+        this._update(internal);
+        this.root = internal;
     }
 
     // ── Public operations ─────────────────────────────────────────────────────
@@ -170,6 +192,7 @@ export default class Rope {
             this._mergeRight(new SplayNode(ch));
         }
         this._mergeRight(right);
+        this.rebalance(); // restore proper Rope structure after building
     }
 
     /**
@@ -182,11 +205,12 @@ export default class Rope {
         const right = this._splitAt(from); // left in this, right starts at `from`
 
         const temp = new Rope();
-        temp.root = right; // borrow Rope temporarily, bypassing singleton guard below
-        const afterDeleted = temp._splitAt(to - from); // discard temp.root (the deleted range)
-        temp.root = null; // release
+        temp.root = right;
+        const afterDeleted = temp._splitAt(to - from); // discard deleted range
+        temp.root = null;
 
         this._mergeRight(afterDeleted);
+        this.rebalance(); // restore proper Rope structure after deletion
     }
 
     /**
@@ -210,10 +234,11 @@ export default class Rope {
 
     toString() {
         let s = '';
+        // Only leaf nodes carry character data; internal nodes are structural.
         const traverse = (n) => {
             if (!n) return;
             traverse(n.left);
-            s += n.value;
+            if (n.isLeaf) s += n.value;
             traverse(n.right);
         };
         traverse(this.root);
@@ -232,32 +257,48 @@ export default class Rope {
      * in-order (i.e. string) order.  Uses the standard recursive median-split
      * approach: O(n) time and O(log n) stack space.
      */
+    /**
+     * Rebuild the tree as a height-balanced Rope while preserving in-order
+     * (string) order.  The result is a proper Rope:
+     *   – Leaf nodes at the bottom hold exactly one character each.
+     *   – Internal nodes hold no data; they only carry the subtree size.
+     * Uses the standard recursive median-split approach: O(n) time.
+     */
     rebalance() {
         if (!this.root) return;
 
-        // 1. Collect all node values via in-order traversal.
-        const vals = [];
+        // 1. Collect in-order character values from leaf nodes only.
+        const chars = [];
         const collect = (n) => {
             if (!n) return;
             collect(n.left);
-            vals.push(n.value);
+            if (n.isLeaf) chars.push(n.value);
             collect(n.right);
         };
         collect(this.root);
 
-        // 2. Recursively build a balanced BST from the sorted value array.
+        if (chars.length === 0) { this.root = null; return; }
+
+        // 2. Build a balanced binary tree:
+        //    – Single character range → leaf node.
+        //    – Multiple characters → internal node with two subtrees.
         const build = (lo, hi, parent) => {
-            if (lo > hi) return null;
-            const mid  = (lo + hi) >> 1;
-            const node = new SplayNode(vals[mid]);
-            node.parent = parent;
-            node.left   = build(lo, mid - 1, node);
-            node.right  = build(mid + 1, hi, node);
-            this._update(node);
-            return node;
+            if (lo === hi) {
+                const leaf    = new SplayNode(chars[lo]);
+                leaf.parent   = parent;
+                leaf.size     = 1;
+                return leaf;
+            }
+            const mid      = lo + ((hi - lo) >> 1);
+            const internal  = new SplayNode(null); // internal: no character
+            internal.parent = parent;
+            internal.left   = build(lo,      mid, internal);
+            internal.right  = build(mid + 1, hi,  internal);
+            this._update(internal);
+            return internal;
         };
 
-        this.root = build(0, vals.length - 1, null);
+        this.root = build(0, chars.length - 1, null);
     }
 
     initialize(text = '') {
@@ -283,16 +324,18 @@ export default class Rope {
 
     static deserialize(data) {
         if (!data) return null;
+        // SplayNode(null) → internal node; SplayNode(char) → leaf node.
         const node  = new SplayNode(data.v);
         node.left   = Rope.deserialize(data.l);
         node.right  = Rope.deserialize(data.r);
         if (node.left)  node.left.parent  = node;
         if (node.right) node.right.parent = node;
 
-        // Recompute sizes bottom-up
+        // Recompute sizes bottom-up respecting the leaf/internal distinction.
         const recompute = (n) => {
             if (!n) return 0;
-            n.size = 1 + recompute(n.left) + recompute(n.right);
+            const own = n.isLeaf ? 1 : 0;
+            n.size = own + recompute(n.left) + recompute(n.right);
             return n.size;
         };
         recompute(node);

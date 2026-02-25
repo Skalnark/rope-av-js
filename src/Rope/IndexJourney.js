@@ -30,15 +30,23 @@ export default class IndexJourney extends Journey {
         this._pathNodes  = null;
     }
 
-    /** Find the node at position k in the tree rooted at root. */
+    /** Find the leaf node at character position k using the Rope traversal rules. */
     _findKthNode(root, k) {
         const sz = (n) => n ? n.size : 0;
         let node = root;
         while (node) {
             const ls = sz(node.left);
-            if (k < ls)        { node = node.left; }
-            else if (k === ls) { return node; }
-            else               { k -= ls + 1; node = node.right; }
+            if (k < ls) {
+                node = node.left;
+            } else {
+                k -= ls;
+                if (node.value !== null) { // leaf node
+                    if (k === 0) return node;
+                    k -= 1; // skip past this leaf's character
+                }
+                // internal node contributes 0 characters; just go right
+                node = node.right;
+            }
         }
         return null;
     }
@@ -93,15 +101,23 @@ export default class IndexJourney extends Journey {
             await prompt.nextLine(2);
 
             // Collect traversal path (no tree modification).
+            // Uses the same leaf/internal traversal rules as Rope._findKth.
             const path = [];
             let node = rope.root;
             let k    = pos;
             while (node) {
                 path.push(node);
                 const ls = rope._sz(node.left);
-                if (k < ls)        { node = node.left; }
-                else if (k === ls) { break; }
-                else               { k -= ls + 1; node = node.right; }
+                if (k < ls) {
+                    node = node.left;
+                } else {
+                    k -= ls;
+                    if (node.value !== null) { // leaf
+                        if (k === 0) break;    // found the target leaf
+                        k -= 1;                // skip past this leaf's character
+                    }
+                    node = node.right;
+                }
             }
 
             this._targetNode = path[path.length - 1] ?? null;
