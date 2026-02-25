@@ -1,0 +1,83 @@
+{
+  "messages": {
+    "finishedExecution":   "Finished execution.",
+    "fastForwardEnabled":  "Step-by-step execution will be fast-forwarded.",
+    "fastForwardDisabled": "Step-by-step execution is enabled.",
+    "ropeCleared":         "Rope cleared.",
+    "ropeInitialized":     "Rope initialized with \"{{text}}\".",
+    "invalidDeleteRange":  "Invalid range: 'from' must be less than 'to'.",
+
+    "insertStart":    "Inserting \"{{text}}\" at position {{pos}}.",
+    "splitAt":        "Splitting the rope at position {{pos}}...",
+    "splitDone":      "Left part: {{leftLen}} char(s). Right part: {{rightLen}} char(s).",
+    "buildNodes":     "Building {{count}} new node(s) for \"{{text}}\"...",
+    "buildNodesDone": "{{count}} node(s) appended to the left partition.",
+    "concatRight":    "Concatenating with the right partition...",
+    "insertDone":     "Insertion complete. Rope is now \"{{result}}\".",
+
+    "deleteStart":      "Deleting characters [{{from}}, {{to}}) from the rope.",
+    "firstSplitDone":   "Prefix: {{leftLen}} char(s). Remaining: {{rightLen}} char(s).",
+    "secondSplit":      "Isolating {{rangeLen}} character(s) to delete...",
+    "secondSplitDone":  "Deleted range: {{deleted}} char(s). Right remainder: {{remaining}} char(s).",
+    "discardMiddle":    "Discarding the deleted range...",
+    "deleteDone":       "Deletion complete. Rope is now \"{{result}}\".",
+
+    "indexStart":       "Finding character at position {{pos}}...",
+    "indexOutOfBounds": "Position {{pos}} is out of bounds (length = {{length}}).",
+    "findPath":         "Traversed {{steps}} node(s) to reach position {{pos}}.",
+    "foundChar":        "Found character '{{char}}' at position {{pos}}.",
+    "splayNode":        "Splaying node '{{char}}' to the root...",
+    "splayDone":        "Splay complete. The accessed node is now the root.",
+    "indexResult":      "rope[{{pos}}] = '{{char}}'."
+  },
+  "ui": {
+    "simulator":    "Simulator",
+    "textDemo":     "Text Demo",
+    "about":        "About",
+
+    "initSection":         "Initialize Rope",
+    "initTextLabel":       "Starting text:",
+    "initTextPlaceholder": "Enter starting text",
+    "init":                "Init",
+
+    "ropeLength": "Length:",
+    "ropeNodes":  "Nodes:",
+    "ropeHeight": "Tree height:",
+
+    "insertLabel":        "Insert text:",
+    "atPosLabel":         "at position:",
+    "insertTextPlaceholder": "Text to insert",
+    "insert":             "Insert",
+
+    "deleteLabel":        "Delete range:",
+    "fromPlaceholder":    "from",
+    "toPlaceholder":      "to",
+    "delete":             "Delete",
+
+    "indexLabel": "Index at position:",
+    "index":      "Index",
+
+    "clear":          "Clear",
+    "enableStepByStep": "Enable step-by-step:",
+    "back":           "Back",
+    "next":           "Next",
+    "finish":         "Finish",
+
+    "aboutProjectTitle": "About this project",
+    "aboutProjectDesc":  "This is a Rope (splay-tree) algorithm visualiser built with JavaScript, HTML and CSS. It is designed to help you understand how the Rope data structure works through interactive step-by-step simulations and visual tree representations.",
+    "developer":         "This project was developed by ",
+
+    "textDemoTitle": "Rope as a Text Buffer",
+    "textDemoDesc":  "A Rope is an ideal data structure for text editors. Unlike a plain array, it supports O(log n) insertions and deletions anywhere in the text, making it perfect for large documents. Below you can see the current string stored in the rope:",
+    "textDemoNote":  "Any Insert / Delete operations performed in the Simulator tab also update the rope displayed here.",
+    "splayTreeTitle": "Why a Splay Tree?",
+    "splayTreeDesc":  "Splay trees are self-adjusting binary search trees. Every accessed node is rotated ('splayed') to the root, so frequently-accessed nodes are found quickly on subsequent operations. This gives amortised O(log n) time for all operations.",
+    "complexityTitle": "Complexity",
+
+    "greetWelcome":    "Welcome to the Rope Algorithm Visualizer!",
+    "greetInsert":     "Initialize the rope, then use Insert / Delete / Index to explore it.",
+    "greetNavigation": "Use 'Next' and 'Back' to step through each operation.",
+    "greetFastForward": "Uncheck 'Enable step-by-step' or click 'Finish' to fast-forward.",
+    "greetEnjoy":      "Enjoy!"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "messages": {
+    "finishedExecution":   "Execução finalizada.",
+    "fastForwardEnabled":  "A execução passo a passo será acelerada.",
+    "fastForwardDisabled": "Execução passo a passo está habilitada.",
+    "ropeCleared":         "Rope limpo.",
+    "ropeInitialized":     "Rope inicializado com \"{{text}}\".",
+    "invalidDeleteRange":  "Intervalo inválido: 'from' deve ser menor que 'to'.",
+
+    "insertStart":    "Inserindo \"{{text}}\" na posição {{pos}}.",
+    "splitAt":        "Dividindo o rope na posição {{pos}}...",
+    "splitDone":      "Parte esquerda: {{leftLen}} caractere(s). Parte direita: {{rightLen}} caractere(s).",
+    "buildNodes":     "Criando {{count}} novo(s) nó(s) para \"{{text}}\"...",
+    "buildNodesDone": "{{count}} nó(s) adicionado(s) à partição esquerda.",
+    "concatRight":    "Concatenando com a partição direita...",
+    "insertDone":     "Inserção concluída. Rope agora é \"{{result}}\".",
+
+    "deleteStart":      "Removendo caracteres [{{from}}, {{to}}) do rope.",
+    "firstSplitDone":   "Prefixo: {{leftLen}} caractere(s). Restante: {{rightLen}} caractere(s).",
+    "secondSplit":      "Isolando {{rangeLen}} caractere(s) para remover...",
+    "secondSplitDone":  "Intervalo removido: {{deleted}} caractere(s). Restante direito: {{remaining}} caractere(s).",
+    "discardMiddle":    "Descartando o intervalo removido...",
+    "deleteDone":       "Remoção concluída. Rope agora é \"{{result}}\".",
+
+    "indexStart":       "Buscando o caractere na posição {{pos}}...",
+    "indexOutOfBounds": "Posição {{pos}} fora dos limites (comprimento = {{length}}).",
+    "findPath":         "Percorridos {{steps}} nó(s) para alcançar a posição {{pos}}.",
+    "foundChar":        "Caractere '{{char}}' encontrado na posição {{pos}}.",
+    "splayNode":        "Realizando splay do nó '{{char}}' para a raiz...",
+    "splayDone":        "Splay concluído. O nó acessado agora é a raiz.",
+    "indexResult":      "rope[{{pos}}] = '{{char}}'."
+  },
+  "ui": {
+    "simulator": "Simulador",
+    "textDemo":  "Demo de Texto",
+    "about":     "Sobre",
+
+    "initSection":         "Inicializar Rope",
+    "initTextLabel":       "Texto inicial:",
+    "initTextPlaceholder": "Digite o texto inicial",
+    "init":                "Iniciar",
+
+    "ropeLength": "Comprimento:",
+    "ropeNodes":  "Nós:",
+    "ropeHeight": "Altura da árvore:",
+
+    "insertLabel":           "Inserir texto:",
+    "atPosLabel":            "na posição:",
+    "insertTextPlaceholder": "Texto a inserir",
+    "insert":                "Inserir",
+
+    "deleteLabel":     "Remover intervalo:",
+    "fromPlaceholder": "de",
+    "toPlaceholder":   "até",
+    "delete":          "Remover",
+
+    "indexLabel": "Índice na posição:",
+    "index":      "Índice",
+
+    "clear":            "Limpar",
+    "enableStepByStep": "Habilitar passo a passo:",
+    "back":             "Voltar",
+    "next":             "Próximo",
+    "finish":           "Concluir",
+
+    "aboutProjectTitle": "Sobre este projeto",
+    "aboutProjectDesc":  "Este é um visualizador do algoritmo Rope (splay tree) construído com JavaScript, HTML e CSS. Foi projetado para ajudar a entender como a estrutura de dados Rope funciona por meio de simulações interativas passo a passo e representações visuais em árvore.",
+    "developer":         "Este projeto foi desenvolvido por ",
+
+    "textDemoTitle": "Rope como Buffer de Texto",
+    "textDemoDesc":  "O Rope é uma estrutura de dados ideal para editores de texto. Ao contrário de um array simples, suporta inserções e remoções em O(log n) em qualquer posição do texto, sendo ideal para documentos grandes.",
+    "textDemoNote":  "Todas as operações de Inserção / Remoção realizadas na aba Simulador também atualizam o rope exibido aqui.",
+    "splayTreeTitle": "Por que Splay Tree?",
+    "splayTreeDesc":  "Splay trees são árvores binárias de busca auto-ajustáveis. A cada acesso, o nó é rotacionado ('splayado') até a raiz, o que acelera acessos futuros ao mesmo nó. Isso garante tempo amortizado O(log n) para todas as operações.",
+    "complexityTitle": "Complexidade",
+
+    "greetWelcome":     "Bem-vindo ao Visualizador do Algoritmo Rope!",
+    "greetInsert":      "Inicialize o rope e use Inserir / Remover / Índice para explorá-lo.",
+    "greetNavigation":  "Use os botões 'Próximo' e 'Voltar' para percorrer cada operação.",
+    "greetFastForward": "Desabilite 'passo a passo' ou clique em 'Concluir' para avançar.",
+    "greetEnjoy":       "Aproveite!"
+  }
+}

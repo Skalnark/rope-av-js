@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rope Algorithm Visualizer</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/firacode@6.2.0/distr/fira_code.css">
+</head>
+
+<body>
+    <h1 id="main-title" class="main-title"><span id="main-title-icon">></span> Rope</h1>
+    <h2 class="sub-title">Algorithm Visualizer</h2>
+
+    <div class="tabs">
+        <button class="tab-button active" id="simulator-tab" data-i18n="ui.simulator">Simulator</button>
+        <button class="tab-button" id="text-demo-tab" data-i18n="ui.textDemo">Text Demo</button>
+        <button class="tab-button" id="about-tab" data-i18n="ui.about">About</button>
+    </div>
+    <div class="tabs-select-wrapper">
+        <select id="tab-select" aria-label="Select view">
+            <option value="simulator" data-i18n="ui.simulator">Simulator</option>
+            <option value="text-demo" data-i18n="ui.textDemo">Text Demo</option>
+            <option value="about" data-i18n="ui.about">About</option>
+        </select>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  SIMULATOR TAB                                                      -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="app" class="app-container">
+
+        <!-- Left panel: controls -->
+        <div id="rope-param-holder" class="param-holder">
+
+            <!-- Init rope -->
+            <div class="item-info-holder">
+                <h3 class="section-label" data-i18n="ui.initSection">Initialize Rope</h3>
+                <div class="item-input-holder input-separator">
+                    <label for="init-text-input" class="info-label" data-i18n="ui.initTextLabel">
+                        Starting text:
+                    </label>
+                    <input type="text" id="init-text-input" class="item-input-holder input-field"
+                           value="Hello!" maxlength="30"
+                           data-i18n-placeholder="ui.initTextPlaceholder"
+                           placeholder="Enter starting text" />
+                    <button id="init-submit" class="item-input-holder submit-button" data-i18n="ui.init">
+                        Init
+                    </button>
+                </div>
+            </div>
+
+            <!-- Rope stats -->
+            <div id="rope-item-info-holder" class="item-info-holder">
+                <div class="bf-info-label">
+                    <strong data-i18n="ui.ropeLength">Length:</strong>
+                    <span id="rope-info-length">-</span>
+                </div>
+                <div class="bf-info-label">
+                    <strong data-i18n="ui.ropeNodes">Nodes:</strong>
+                    <span id="rope-info-nodes">-</span>
+                </div>
+                <div class="bf-info-label">
+                    <strong data-i18n="ui.ropeHeight">Tree height:</strong>
+                    <span id="rope-info-height">-</span>
+                </div>
+            </div>
+
+            <!-- Operations -->
+            <div id="rope-operations-holder" class="item-info-holder">
+
+                <!-- Insert -->
+                <div class="item-input-holder input-separator">
+                    <label class="info-label" data-i18n="ui.insertLabel">Insert text:</label>
+                    <input type="text" id="insert-text-input" class="item-input-holder input-field"
+                           maxlength="20" placeholder="Text to insert"
+                           data-i18n-placeholder="ui.insertTextPlaceholder" />
+                    <label class="info-label" data-i18n="ui.atPosLabel">at position:</label>
+                    <input type="number" id="insert-pos-input" class="item-input-holder input-field"
+                           min="0" value="0" style="width:70px" />
+                    <button id="insert-submit" class="item-input-holder submit-button" data-i18n="ui.insert">
+                        Insert
+                    </button>
+                </div>
+
+                <!-- Delete -->
+                <div class="item-input-holder input-separator">
+                    <label class="info-label" data-i18n="ui.deleteLabel">Delete range:</label>
+                    <input type="number" id="delete-from-input" class="item-input-holder input-field"
+                           min="0" value="0" style="width:70px"
+                           placeholder="from" data-i18n-placeholder="ui.fromPlaceholder" />
+                    <span class="info-label">–</span>
+                    <input type="number" id="delete-to-input" class="item-input-holder input-field"
+                           min="1" value="1" style="width:70px"
+                           placeholder="to" data-i18n-placeholder="ui.toPlaceholder" />
+                    <button id="delete-submit" class="item-input-holder submit-button" data-i18n="ui.delete">
+                        Delete
+                    </button>
+                </div>
+
+                <!-- Index -->
+                <div class="item-input-holder input-separator">
+                    <label class="info-label" data-i18n="ui.indexLabel">Index at position:</label>
+                    <input type="number" id="index-pos-input" class="item-input-holder input-field"
+                           min="0" value="0" style="width:70px" />
+                    <button id="index-submit" class="item-input-holder submit-button" data-i18n="ui.index">
+                        Index
+                    </button>
+                </div>
+
+                <!-- Clear -->
+                <div class="item-input-holder input-separator">
+                    <button id="clear-submit" class="item-input-holder submit-button"
+                            data-i18n="ui.clear" style="background:var(--error-color,#fb4a3d)">
+                        Clear
+                    </button>
+                    <div class="checkbox-holder">
+                        <label for="fast-forward-checkbox" class="checkbox-label"
+                               data-i18n="ui.enableStepByStep">Enable step-by-step:</label>
+                        <input type="checkbox" id="fast-forward-checkbox" class="checkbox" checked>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Centre: pseudo-code + prompt -->
+        <div id="prompt-holder" class="param-holder">
+            <div class="prompt-window">
+                <div id="prompt-simulator" class="prompt-simulator">
+                    <span class="prompt-line"></span>
+                </div>
+                <pre id="pseudo-code-simulator" class="code prompt-simulator">
+                    <code class="prompt-line"></code>
+                </pre>
+            </div>
+            <div id="prev-next-holder" class="prev-next-holder">
+                <button id="prev-step-button" class="next-step-button" data-i18n="ui.back">Back</button>
+                <button id="next-step-button" class="next-step-button" data-i18n="ui.next">Next</button>
+            </div>
+            <button id="finish-journey-button" class="next-step-button" data-i18n="ui.finish">
+                Finish
+            </button>
+        </div>
+
+        <!-- Right: tree SVG -->
+        <div id="rope-container" class="param-holder">
+            <svg id="rope-svg" class="svg"></svg>
+        </div>
+
+        <button id="scroll-button" class="scroll-button">▲</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  TEXT DEMO TAB                                                      -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="text-demo" class="app-container" style="display:none">
+        <div class="param-holder about-content">
+            <h2 data-i18n="ui.textDemoTitle">Rope as a Text Buffer</h2>
+            <p data-i18n="ui.textDemoDesc">
+                A Rope is an ideal data structure for text editors. Unlike a plain array, it supports
+                O(log n) insertions and deletions anywhere in the text, making it perfect for large
+                documents. Below you can see the current string stored in the rope:
+            </p>
+
+            <div class="prompt-simulator" style="height:fit-content; padding:1rem; margin-bottom:1.5rem; min-height:2.5rem;">
+                <code id="text-demo-display" class="prompt-line" style="white-space:pre-wrap; word-break:break-all;"></code>
+            </div>
+
+            <p data-i18n="ui.textDemoNote">
+                Any Insert / Delete operations performed in the Simulator tab also update the rope
+                displayed here. Use the Simulator to explore the splay-tree internals.
+            </p>
+
+            <h3 data-i18n="ui.splayTreeTitle">Why a Splay Tree?</h3>
+            <p data-i18n="ui.splayTreeDesc">
+                Splay trees are self-adjusting binary search trees. Every accessed node is rotated
+                ("splayed") to the root, so frequently-accessed nodes are found quickly on subsequent
+                operations. This gives amortised O(log n) time for all operations while naturally
+                keeping the tree reasonably balanced.
+            </p>
+
+            <h3 data-i18n="ui.complexityTitle">Complexity</h3>
+            <div class="prompt-simulator" style="height:fit-content; padding:1rem; margin-bottom:1.5rem;">
+                <code class="prompt-line">index(i)           → O(log n) amortised (splay to root)</code>
+                <code class="prompt-line">insert(text, pos)  → O(k log n) where k = len(text)</code>
+                <code class="prompt-line">delete(from, to)   → O(log n)</code>
+                <code class="prompt-line">concat(A, B)       → O(log n)</code>
+                <code class="prompt-line">split(rope, pos)   → O(log n)</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!--  ABOUT TAB                                                           -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div id="about" class="app-container" style="display:none">
+        <div class="param-holder about-content" id="about-content">
+            <h2 data-i18n="ui.aboutProjectTitle">About this project</h2>
+            <p data-i18n="ui.aboutProjectDesc">
+                This is a Rope (splay-tree) algorithm visualiser built with JavaScript, HTML and CSS.
+                It is designed to help you understand how the Rope data structure works through
+                interactive step-by-step simulations and visual tree representations.
+            </p>
+            <p>
+                <span data-i18n="ui.developer">This project was developed by </span>
+                <a class="github-link" href="https://github.com/Skalnark/bloom_filter_algorithm_visualizer"
+                   target="_blank" rel="noopener noreferrer" aria-label="Skalnark on GitHub">
+                    <svg class="github-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                         width="18" height="18" aria-hidden="true" focusable="false">
+                        <path fill="currentColor"
+                              d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.387.6.113.82-.263.82-.583
+                                 0-.288-.01-1.05-.016-2.06-3.338.726-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756
+                                 -1.333-1.756-1.09-.745.083-.73.083-.73 1.205.085 1.84 1.238 1.84 1.238
+                                 1.07 1.834 2.807 1.304 3.492.997.108-.776.418-1.305.762-1.606-2.665-.305
+                                 -5.466-1.332-5.466-5.93 0-1.31.468-2.381 1.235-3.221-.123-.303-.535-1.523
+                                 .117-3.176 0 0 1.008-.323 3.3 1.23A11.52 11.52 0 0112 5.803c1.02.005
+                                 2.045.138 3.003.404 2.29-1.553 3.296-1.23 3.296-1.23.653 1.653.242 2.873
+                                 .12 3.176.77.84 1.233 1.911 1.233 3.221 0 4.61-2.805 5.624-5.476 5.921
+                                 .43.372.823 1.102.823 2.222 0 1.604-.015 2.896-.015 3.286 0 .323.216.701
+                                 .825.582C20.565 21.796 24 17.297 24 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    Skalnark
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <script src="index.js" type="module"></script>
+
+    <footer class="site-footer">
+        <div class="footer-controls">
+            <label for="lang-select" class="visually-hidden">Language</label>
+            <select id="lang-select" aria-label="Select language">
+                <option value="en">English</option>
+                <option value="pt">Português</option>
+            </select>
+            <button id="theme-toggle" aria-pressed="false" title="Toggle theme">
+                <span class="visually-hidden">Toggle theme</span>
+                <svg class="theme-icon icon-moon" xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                </svg>
+                <svg class="theme-icon icon-sun" xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+                    <path fill="currentColor"
+                          d="M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.79 1.8-1.79zM1 13h3v-2H1v2zm10 9h2v-3h-2v3z
+                             m7.24-2.84l1.79 1.79 1.79-1.79-1.79-1.79-1.79 1.79zM20 11v2h3v-2h-3zM4.22 19.78l
+                             1.79-1.79-1.79-1.79-1.79 1.79 1.79 1.79zM12 5a7 7 0 100 14 7 7 0 000-14zm0-5h-2v3h2V0z
+                             m8 12a8 8 0 01-8 8v-3a5 5 0 005-5h3z"/>
+                </svg>
+            </button>
+            <a class="github-link" href="https://github.com/Skalnark/bloom_filter_algorithm_visualizer"
+               target="_blank" rel="noopener noreferrer" aria-label="Skalnark on GitHub">
+                <svg class="github-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                     width="18" height="18" aria-hidden="true" focusable="false">
+                    <path fill="currentColor"
+                          d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.387.6.113.82-.263.82-.583
+                             0-.288-.01-1.05-.016-2.06-3.338.726-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756
+                             -1.333-1.756-1.09-.745.083-.73.083-.73 1.205.085 1.84 1.238 1.84 1.238
+                             1.07 1.834 2.807 1.304 3.492.997.108-.776.418-1.305.762-1.606-2.665-.305
+                             -5.466-1.332-5.466-5.93 0-1.31.468-2.381 1.235-3.221-.123-.303-.535-1.523
+                             .117-3.176 0 0 1.008-.323 3.3 1.23A11.52 11.52 0 0112 5.803c1.02.005
+                             2.045.138 3.003.404 2.29-1.553 3.296-1.23 3.296-1.23.653 1.653.242 2.873
+                             .12 3.176.77.84 1.233 1.911 1.233 3.221 0 4.61-2.805 5.624-5.476 5.921
+                             .43.372.823 1.102.823 2.222 0 1.604-.015 2.896-.015 3.286 0 .323.216.701
+                             .825.582C20.565 21.796 24 17.297 24 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                <span class="visually-hidden">Skalnark on GitHub</span>
+            </a>
+        </div>
+    </footer>
+</body>
+
+</html>
