@@ -38,6 +38,13 @@ class Draw {
         return layout;
     }
 
+    _nodeRadius(node, baseR) {
+        if (node.value === null) return baseR;
+        const charCount = node.value.length;
+        const targetFontSize = 12;
+        return Math.max(baseR, Math.ceil((charCount * targetFontSize * 0.65 + 10) / 2));
+    }
+
     renderTree(root, highlightNodes = new Set()) {
         if (!this.svg) return;
         while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
@@ -54,19 +61,25 @@ class Draw {
         const W = Math.max(this.svg.clientWidth || 0, 400);
         const minR = 14,
             maxR = 24;
-        const nodeRadius = Math.min(maxR, Math.max(minR, (W - 60) / (n * 3)));
-        const levelH = Math.max(65, nodeRadius * 3.8);
+        const baseRadius = Math.min(maxR, Math.max(minR, (W - 60) / (n * 3)));
+
+        layout.forEach((info, node) => {
+            info.r = this._nodeRadius(node, baseRadius);
+        });
+
+        const maxR2 = Math.max(...[...layout.values()].map((v) => v.r));
+        const levelH = Math.max(65, maxR2 * 3.8);
         const H = (maxDepth + 2) * levelH + 50;
 
         this.svg.setAttribute('height', H);
         this.svg.style.height = H + 'px';
 
-        const margin = nodeRadius + 30;
+        const margin = maxR2 + 30;
         const span = Math.max(1, n - 1);
         const xOf = (pos) => margin + (pos * (W - 2 * margin)) / span;
-        const yOf = (dep) => nodeRadius + 20 + dep * levelH;
+        const yOf = (dep) => maxR2 + 20 + dep * levelH;
 
-        layout.forEach(({ inOrderPos, depth }, node) => {
+        layout.forEach(({ inOrderPos, depth, r }, node) => {
             const px = xOf(inOrderPos),
                 py = yOf(depth);
             if (node.left) {
@@ -77,7 +90,8 @@ class Draw {
                         py,
                         xOf(c.inOrderPos),
                         yOf(c.depth),
-                        nodeRadius,
+                        r,
+                        c.r,
                         '#4a9eff',
                     );
             }
@@ -89,18 +103,19 @@ class Draw {
                         py,
                         xOf(c.inOrderPos),
                         yOf(c.depth),
-                        nodeRadius,
+                        r,
+                        c.r,
                         '#ff8c4a',
                     );
             }
         });
 
-        layout.forEach(({ inOrderPos, depth }, node) => {
+        layout.forEach(({ inOrderPos, depth, r }, node) => {
             this._drawNode(
                 node,
                 xOf(inOrderPos),
                 yOf(depth),
-                nodeRadius,
+                r,
                 highlightNodes.has(node),
             );
         });
@@ -108,16 +123,16 @@ class Draw {
         this._drawStringLabel(root, H - 16);
     }
 
-    _drawEdge(x1, y1, x2, y2, r, color) {
+    _drawEdge(x1, y1, x2, y2, r1, r2, color) {
         const dx = x2 - x1,
             dy = y2 - y1;
         const d = Math.sqrt(dx * dx + dy * dy) || 1;
         this.svg.appendChild(
             this._el('line', {
-                x1: x1 + (dx / d) * r,
-                y1: y1 + (dy / d) * r,
-                x2: x2 - (dx / d) * r,
-                y2: y2 - (dy / d) * r,
+                x1: x1 + (dx / d) * r1,
+                y1: y1 + (dy / d) * r1,
+                x2: x2 - (dx / d) * r2,
+                y2: y2 - (dy / d) * r2,
                 stroke: color,
                 'stroke-width': 2,
                 opacity: 0.75,
@@ -134,10 +149,10 @@ class Draw {
         if (isLeaf) {
             const display = node.value;
             const fontSize = Math.max(
-                7,
+                10,
                 Math.min(
                     Math.round(r * 0.95),
-                    Math.floor((2 * r - 4) / (display.length * 0.65)),
+                    Math.floor((2 * r - 10) / (display.length * 0.65)),
                 ),
             );
             this.svg.appendChild(
@@ -198,7 +213,6 @@ class Draw {
                     opacity: 0.7,
                 }),
             );
-            const weight = node.left ? node.left.size : 0;
             this.svg.appendChild(
                 this._el(
                     'text',
@@ -212,11 +226,12 @@ class Draw {
                         fill: highlighted ? fg : accent,
                         opacity: 0.85,
                     },
-                    String(weight),
+                    String(node.size),
                 ),
             );
         }
 
+        const weight = node.isLeaf ? 0 : (node.left ? node.left.size : 0);
         this.svg.appendChild(
             this._el(
                 'text',
@@ -229,7 +244,7 @@ class Draw {
                     fill: fg,
                     opacity: 0.45,
                 },
-                's=' + node.size,
+                node.isLeaf ? '' : 'w=' + weight,
             ),
         );
     }
