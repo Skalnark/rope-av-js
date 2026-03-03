@@ -74,7 +74,10 @@ export default class InsertJourney extends Journey {
             this._rightRoot = rope._splitAt(clampedPos);
             this._rightRootSnapshot = Rope.serialize(this._rightRoot);
 
-            draw.renderTree(rope.root);
+            draw.renderTrees([
+                { root: rope.root, label: 'L' },
+                { root: this._rightRoot, label: 'R' },
+            ]);
             const msg2 =
                 t('messages.splitDone', {
                     leftLen: rope._sz(rope.root),
@@ -97,15 +100,33 @@ export default class InsertJourney extends Journey {
                 `Building ${text.length} new node(s) for "${text}"…`;
             await this._print(msg);
 
-            for (const ch of text) rope._mergeRight(new SplayNode(ch));
-            rope.rebalance();
+            const nRope = new Rope();
+            for (const ch of text) nRope._mergeRight(new SplayNode(ch));
+            nRope.rebalance();
+            const nRoot = nRope.root;
+            nRope.root = null;
+
+            const rightRootDisplay =
+                this._rightRoot !== null
+                    ? this._rightRoot
+                    : this._rightRootSnapshot
+                    ? this._treeFromSnapshot(this._rightRootSnapshot)
+                    : null;
+
+            draw.renderTrees([
+                { root: rope.root, label: 'L' },
+                { root: nRoot,     label: 'N' },
+                { root: rightRootDisplay, label: 'R' },
+            ]);
 
             const msg2 =
                 t('messages.buildNodesDone', { count: text.length }) ??
                 `${text.length} node(s) built and appended to the left part.`;
             await this._print(msg2);
-            draw.renderTree(rope.root);
             await managerInstance.waitForUser();
+
+            rope._mergeRight(nRoot);
+            rope.rebalance();
             return ctx;
         };
         this.steps.push(buildStep);

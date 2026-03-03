@@ -1,6 +1,5 @@
 import Step from './Step.js';
 import { managerInstance } from './Manager.js';
-import draw from './Draw.js';
 import { prompt } from './Prompt.js';
 
 export class Journey {

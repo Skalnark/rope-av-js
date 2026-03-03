@@ -249,6 +249,116 @@ class Draw {
         );
     }
 
+    renderTrees(trees) {
+        if (!this.svg) return;
+        while (this.svg.firstChild) this.svg.removeChild(this.svg.firstChild);
+
+        if (!trees || trees.length === 0) { this._drawEmpty(); return; }
+
+        const W = Math.max(this.svg.clientWidth || 0, 400);
+        const cols = trees.length;
+        const colW = W / cols;
+
+        const LABEL_COLORS = ['#4a9eff', '#5ad15a', '#ff8c4a'];
+        const DEFAULT_COLOR = this._getVar('--text', '#b6fcd5');
+
+        const layouts = trees.map(({ root }) =>
+            root ? this._computeLayout(root) : new Map(),
+        );
+
+        const allDepths = layouts.flatMap(layout =>
+            [...layout.values()].map(v => v.depth),
+        );
+        const overallMaxDepth = allDepths.length > 0 ? Math.max(...allDepths) : 0;
+
+        const minR = 14, maxR = 24;
+        const maxNodeCount = Math.max(...layouts.map(l => l.size), 1);
+        const baseRadius = Math.min(
+            maxR,
+            Math.max(minR, (colW - 40) / (maxNodeCount * 3)),
+        );
+        layouts.forEach(layout => {
+            layout.forEach((info, node) => { info.r = this._nodeRadius(node, baseRadius); });
+        });
+
+        const allRadii = layouts.flatMap(layout => [...layout.values()].map(v => v.r));
+        const maxR2 = allRadii.length > 0 ? Math.max(...allRadii) : minR;
+        const levelH = Math.max(65, maxR2 * 3.8);
+
+        const LABEL_TOP = 22;
+        const TREE_TOP = 50;
+        const H = TREE_TOP + (overallMaxDepth + 1) * levelH + maxR2 + 40;
+
+        this.svg.setAttribute('height', H);
+        this.svg.style.height = H + 'px';
+
+        for (let i = 1; i < cols; i++) {
+            this.svg.appendChild(this._el('line', {
+                x1: i * colW, y1: 10,
+                x2: i * colW, y2: H - 10,
+                stroke: DEFAULT_COLOR,
+                'stroke-width': 1,
+                opacity: 0.2,
+                'stroke-dasharray': '6 4',
+            }));
+        }
+
+        trees.forEach(({ root, label }, i) => {
+            const layout = layouts[i];
+            const color = LABEL_COLORS[i] || DEFAULT_COLOR;
+            const colStart = i * colW;
+
+            const labelStr = label + (root ? ` (${root.size} ch)` : ' \u2205');
+            this.svg.appendChild(this._el('text', {
+                x: colStart + colW / 2,
+                y: LABEL_TOP,
+                'text-anchor': 'middle',
+                'font-size': 14,
+                'font-family': 'sans-serif',
+                'font-weight': 'bold',
+                fill: color,
+            }, labelStr));
+
+            if (!root || layout.size === 0) return;
+
+            const n = layout.size;
+            const margin = maxR2 + 15;
+            const xOf = n === 1
+                ? () => colStart + colW / 2
+                : pos => colStart + margin + (pos * (colW - 2 * margin)) / (n - 1);
+            const yOf = dep => TREE_TOP + maxR2 + dep * levelH;
+
+            layout.forEach(({ inOrderPos, depth, r }, node) => {
+                const px = xOf(inOrderPos), py = yOf(depth);
+                if (node.left) {
+                    const c = layout.get(node.left);
+                    if (c) this._drawEdge(px, py, xOf(c.inOrderPos), yOf(c.depth), r, c.r, '#4a9eff');
+                }
+                if (node.right) {
+                    const c = layout.get(node.right);
+                    if (c) this._drawEdge(px, py, xOf(c.inOrderPos), yOf(c.depth), r, c.r, '#ff8c4a');
+                }
+            });
+
+            layout.forEach(({ inOrderPos, depth, r }, node) => {
+                this._drawNode(node, xOf(inOrderPos), yOf(depth), r, false);
+            });
+
+            let s = '';
+            const trav = nd => { if (!nd) return; trav(nd.left); if (nd.value !== null) s += nd.value; trav(nd.right); };
+            trav(root);
+            this.svg.appendChild(this._el('text', {
+                x: colStart + colW / 2,
+                y: H - 16,
+                'text-anchor': 'middle',
+                'font-size': 12,
+                'font-family': 'Fira Code, monospace',
+                fill: color,
+                opacity: 0.75,
+            }, '"' + s + '"'));
+        });
+    }
+
     _drawStringLabel(root, y) {
         let s = '';
         const trav = (n) => {
