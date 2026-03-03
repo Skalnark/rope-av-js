@@ -81,7 +81,10 @@ export default class DeleteJourney extends Journey {
             this._restRoot = rope._splitAt(clampedFrom);
             this._restRootSnapshot = Rope.serialize(this._restRoot);
 
-            draw.renderTree(rope.root);
+            draw.renderTrees([
+                { root: rope.root,      label: 'L' },
+                { root: this._restRoot, label: 'rest' },
+            ]);
             const msg2 =
                 t('messages.firstSplitDone', {
                     leftLen: rope._sz(rope.root),
@@ -122,7 +125,11 @@ export default class DeleteJourney extends Journey {
 
             this._rightRootSnapshot = Rope.serialize(this._rightRoot);
 
-            draw.renderTree(rope.root);
+            draw.renderTrees([
+                { root: rope.root,          label: 'L' },
+                { root: this._deletedRoot,  label: 'M' },
+                { root: this._rightRoot,    label: 'R' },
+            ]);
             const msg2 =
                 t('messages.secondSplitDone', {
                     deleted: rope._sz(this._deletedRoot),
