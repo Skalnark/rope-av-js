@@ -7,7 +7,7 @@
   "type": "commonjs",
   "scripts": {
     "start": "parcel index.html -p 3000",
-    "build": "rm -rf dist && parcel build index.html --dist-dir dist --public-url /bloom_filter_algorithm_visualizer/",
+    "build": "rm -rf dist && parcel build index.html --dist-dir dist --public-url /rope_av_js/",
     "predeploy": "rm -rf dist .parcel-cache; npm run build",
     "deploy": "git push origin --delete gh-pages; gh-pages -d dist ; rm -rf .parcel-cache dist",
     "test": "jest --runInBand"
