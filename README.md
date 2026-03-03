@@ -2,7 +2,7 @@
 
 ## 🔗 Live demo
 
-You can access the live demo on your browser [clicking here](https://skalnark.github.io/rope_av_js/).
+You can access the live demo on your browser [clicking here](https://skalnark.github.io/rope-av-js/).
 
 ## Features
 
